@@ -21,7 +21,7 @@ setup(
     name="drone-devpi",
     version=get_version(),
     description="Module for testing drone-pypi.",
-    url="http://github.com/drone-plugins/drone-devpi",
+    url="https://github.com/drone-python/plugin-devpi",
     packages=["drone_devpi"],
     maintainer="Drone Contributors",
     maintainer_email="support@drone.io",

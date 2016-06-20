@@ -5,10 +5,9 @@ Everything needed to publish Python modules to a DevPi server.
 Recommended reading: http://doc.devpi.net/latest/quickstart-releaseprocess.html
 """
 import sys
-import urllib.parse
-
-import drone
 import subprocess
+
+import plugin_input
 
 # devpi uses a 'clientdir' arg to determine where to store state. We make
 # this overridable below to facilitate the integration test process.
@@ -91,11 +90,9 @@ def create_index(index, clientdir=DEFAULT_CLIENTDIR):
 @die_on_error
 def upload_package(path, clientdir=DEFAULT_CLIENTDIR):
     """
-    Upload the package residing at ``path`` to the currently selected devpi
+    Upload the package in the CWD to the currently selected devpi
     server + index.
 
-    :param str path: An absolute or relative path to the directory containing
-        the package you'd like to upload.
     :param str clientdir: Path to a directory for the devpi CLI to store state.
     :rtype: subprocess.CompletedProcess
     """
@@ -106,44 +103,13 @@ def upload_package(path, clientdir=DEFAULT_CLIENTDIR):
     return cmd
 
 
-def check_vargs(vargs):
-    """
-    Check over the args passed in to make sure that we have everything we
-    need to get the upload done. Exit with code 1 if the input is bad.
-
-    :param dict vargs: Contents of the 'vargs' JSON array in the
-        the plugin input.
-    """
-    server_uri = vargs.get('server', '')
-    parsed = urllib.parse.urlsplit(server_uri)
-    if not all([parsed.scheme, parsed.netloc]):
-        print(
-            "You must specify the full, absolute URI to your devpi server "
-            "(including protocol).")
-        sys.exit(1)
-    index = vargs.get('index')
-    if not index:
-        print("You must specify an index on your devpi server to upload to.")
-        sys.exit(1)
-    username = vargs.get('username')
-    if not username:
-        print("You must specify a username to upload packages as.")
-        sys.exit(1)
-    password = vargs.get('password')
-    if password is None:
-        print("You must specify a password.")
-        sys.exit(1)
-
-
 def main():
-    payload = drone.plugin.get_input()
-    vargs = payload['vargs']
-    check_vargs(vargs)
+    plugin_input.values.load_values()
 
-    select_server(vargs['server'])
-    login(vargs['username'], vargs['password'])
-    select_index(vargs['index'])
-    upload_package(payload['workspace']['path'])
+    select_server(plugin_input.values['SERVER'])
+    login(plugin_input.values['USERNAME'], plugin_input.values['PASSWORD'])
+    select_index(plugin_input.values['INDEX'])
+    upload_package(plugin_input.values['PACKAGE_PATH'])
 
 if __name__ == "__main__":
     main()
